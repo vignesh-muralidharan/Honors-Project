@@ -6,20 +6,18 @@ import sys
 pygame.init()
 
 # Set up the window
-width, height = 800, 600
 window_title = "Speedrun"
-window_size = (width, height)
-screen = pygame.display.set_mode(window_size)
-pygame.display.set_caption(window_title)
+screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
 
 # Main game loop
 while True:
+    keys = pygame.key.get_pressed()
     for event in pygame.event.get():
-        if event.type == pygame.QUIT:
+        if event.type == pygame.QUIT or keys[pygame.K_q]:
             pygame.quit()
-            sys.exit()
+            sys.exit()        
 
-    # Add your game logic or drawing code here
-
+    #Game Logic
+    screen.fill(86)
     # Update the display
     pygame.display.flip()

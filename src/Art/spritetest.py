@@ -1,25 +1,34 @@
 import os
 import sys
 import pygame
-#important information::
-"""Run1 -- up:1, down:0, left:0, right:0
-Run2 -- up:1, down:0, left:7, right:3
-Run3 -- up:-1, down:0, left:15, right:3
-Run4 -- up:2, down:0, left:23, right:0
-Run5 -- up:2, down:0, left:6, right:3
-Run6 -- up:1, down:0, left:-6, right:1
-Run7 -- up:-1, down:0, left:3, right:0
-Run8 -- 0, 0, 1, 0"""
+
 pygame.init()
+clock = pygame.time.Clock()
+FPS = 30
 counter = 0
+runcounter = 0
+deadcounter = 0
+jumpcounter = 0
+
 window_title = "Speedrun"
 screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
 
+#prepare run images
+runimages = [pygame.image.load("./src/Art/Run/{}".format(path)) for path in os.listdir("./src/Art/Run")]
+[i.convert_alpha() for i in runimages]
 
-images = [pygame.image.load("./Run/{}".format(path)) for path in os.listdir("./Run")]
-runoffset = [0,3,3,0,3,1,0,0]
-for i in images:
-    i.convert_alpha()
+#prepare jump images
+jumpimages = [pygame.image.load("./src/Art/Jump/{}".format(path)) for path in os.listdir("./src/Art/Jump")]
+
+#prepare dead images
+deadimages = [pygame.image.load("./src/Art/Dead/{}".format(path)) for path in os.listdir("./src/Art/Dead")]
+[i.convert_alpha() for i in deadimages]
+deadimages.append(deadimages[-1])  #extending dead frame further , first length is 4, now length becomes 6
+deadimages.append(deadimages[-1])
+
+#prepare idle images
+idleimage = [pygame.image.load("./src/Art/Idle/{}".format(path)) for path in os.listdir("./src/Art/Idle")]
+idleimage[0].convert_alpha()
 
 # Main game loop
 while True:
@@ -30,13 +39,35 @@ while True:
             sys.exit()        
 
     #Game Logic
+    #Drawing Running Character
     screen.fill((255,255,255))
-    screen.blit(images[counter//30], (100-runoffset[counter//30],100))
-    if counter == 230:
-        counter = 0
+    screen.blit(runimages[runcounter//3], (100,100))
+    #Drawing Dying Character
+    screen.blit(deadimages[deadcounter//7], (200,100))
+    #Drawing Jumping Character
+    screen.blit(jumpimages[jumpcounter//5], (300,100))
+    #Drawing Idle Image
+    screen.blit(idleimage[0], (400,100))
+
+    #updating counters
+    if deadcounter == 41:
+        deadcounter = 0
     else:
-        counter+=1
+        deadcounter+= 1
+    #---------
+    if runcounter == 23:
+        runcounter = 0
+    else:
+        runcounter+=1
+    #----------
+    if jumpcounter == 34:
+        jumpcounter = 0
+    else:
+        jumpcounter += 1
+    
+
 
     # Update the display
     pygame.display.flip()
+    clock.tick(FPS)
 

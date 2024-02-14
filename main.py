@@ -5,6 +5,10 @@ import sys
 # Initialize Pygame
 pygame.init()
 
+#limit FPS
+FPS = 30
+clock = pygame.time.Clock()
+
 # Set up the window
 window_title = "Speedrun"
 screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
@@ -24,4 +28,8 @@ while True:
     screen.fill((255,255,255))
     # Update the display
     Player.draw(screen)
+    Player.move()
+
+    
     pygame.display.flip()
+    clock.tick(FPS)

@@ -15,6 +15,14 @@ screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
 
 Player = src.classes.Player(100,100)
 
+levels = [src.classes.Level(src.src.funcs.imageuse.getLevelImages(i), []) for i in range(1,4)]
+levelhitboxes = [src.hitboxdata.level1, src.hitboxdata.level2, src.hitboxdata.level3]
+for i in range(0,3):
+    for j in levelhitboxes[i]:
+        levels[i]._add_surface_(j)
+    levels[i].update_surfaces()
+currentlevel = 0
+
 # Main game loop
 while True:
     keys = pygame.key.get_pressed()
@@ -22,14 +30,18 @@ while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT or keys[pygame.K_q]:
             pygame.quit()
-            sys.exit()        
+            sys.exit()     
+        if keys[pygame.K_l]:
+            currentlevel += 1
+            if currentlevel == len(levels):
+                currentlevel = 0    
 
     #Game Logic
-    screen.fill((255,255,255))
     # Update the display
+    levels[currentlevel].animate(screen)
     Player.draw(screen)
     Player.move()
-
+    
     
     pygame.display.flip()
     clock.tick(FPS)

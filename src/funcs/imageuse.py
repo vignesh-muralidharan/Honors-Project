@@ -24,3 +24,6 @@ def getIdleImages():
     [i.convert_alpha() for i in temp]
     return temp
 
+def getLevelImages(levelno):
+    temp = [pygame.image.load("./src/Art/Map/Level{}_Grain.png".format(levelno)), pygame.image.load("./src/Art/Map/Level{}_Grain2.png".format(levelno))]
+    return temp

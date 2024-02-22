@@ -51,6 +51,7 @@ while True:
         Player.currentanimation = 'idle'
         _ = 'restart'
         continue
+
     __ = Player.move(levels[currentlevel])
     if __ == "next":
         currentlevel += 1
@@ -60,7 +61,15 @@ while True:
                 Player.x,Player.y = (0,100) 
     Player.collide(levels[currentlevel])
     
-    pygame.draw.rect(screen, (255,130,130), levels[currentlevel].winrect, 1)
+
+    #debugtime
+    font = pygame.font.SysFont("Arial", 30)
+    text = font.render("CanJump: {}, Jumping: {}, Stableground: {}, Jumpcounter: {} ".format(Player.canjump, Player.jumping, Player.stableground, Player.jumpcounter), True, (0,0,0))
+    screen.blit(text, (0,0))
+    
+    #debug code::
+    #pygame.draw.rect(screen, (255,130,130), levels[currentlevel].winrect, 1)
+    levels[currentlevel].debug(screen)
     #refresh display
     pygame.display.flip()
     clock.tick(FPS)

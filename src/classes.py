@@ -55,6 +55,18 @@ class Level:
         self.glitchsurfaces = [i if (i[1] == 3) else None for i in self.surfaces]
         self.glitchsurfaces = list(filter(None, self.glitchsurfaces))
 
+    def check_glitch(self, player):
+        for surface in self.glitchsurfaces:
+                tempRect = pygame.Rect(surface[0][0],surface[0][1],surface[0][2],surface[0][3])
+                if pygame.Rect.colliderect(player.rect, tempRect):
+                    return True
+        return False
+    
+    def debug(self, window):
+        for surface in self.surfaces:
+            pygame.draw.rect(window, (255,255,0), pygame.Rect(surface[0][0],surface[0][1],surface[0][2],surface[0][3]), 3)
+    
+
 
 class Player:
     jumping = False  
@@ -67,9 +79,11 @@ class Player:
     velocity = 10
     direction = 1
     counter = 0
+    jumpcounter = 0
     GRAVITY = 15
 
     currentanimation = 'fall'
+    
     #animation counter limits
 
     RUNCL = 23
@@ -113,8 +127,7 @@ class Player:
             window.blit(image, (self.x,self.y))
         elif self.direction == -1:
             window.blit(pygame.transform.flip(image, True, False), (self.x, self.y))
-
-        #pygame.draw.rect(window, pygame.color.Color(255,150,0), self.rect, 2)
+        pygame.draw.rect(window, pygame.color.Color(255,150,0), self.rect, 2)
         self.update()
 
     def update(self):
@@ -144,11 +157,10 @@ class Player:
                 self.currentanimation = 'jump'
             elif not self.moving:
                 self.currentanimation = 'idle'
-        elif self.currentanimation == 'fall':
-            if self.stableground:
+        elif self.currentanimation == 'fall' and self.stableground:
                 self.currentanimation = 'idle'
 
-        if not(self.stableground):
+        if not(self.stableground) and not(self.jumping):
             self.currentanimation = 'fall'
 
 
@@ -198,6 +210,7 @@ class Player:
             return self.jumpimages[-2]
 
     def collide(self, level: Level):
+        self.canjump = level.check_glitch(self)  
         if not(level.check_danger(self)):
             surface = level.check_collisions(self)
             if surface != False:
@@ -207,7 +220,7 @@ class Player:
                     self.y -= abs(self.rect.bottom - (surface.top+1))
                 elif self.rect.bottom > surface.bottom:
                     #approach is from bottom
-                    self.y += abs(self.rect.top - (surface.bottom-1))    
+                    self.y += abs(self.rect.top - (surface.bottom - 5)) 
             else:
                 self.stableground = False
         else:
@@ -216,14 +229,22 @@ class Player:
     def move(self,level):
         if not(self.dead):
             inputs = funcs.movement.getMovementControls()
-            if self.stableground:
-                if inputs[0] or inputs[3] and self.canjump:
-                    #jump
-                    pass
+            if self.stableground and self.canjump:
+                if inputs[0] or inputs[3]:
+                    self.jumping = True
             else:
-                #gravity
-                self.y += self.GRAVITY
+                #gravity // apply only if not jumping
+                if not(self.jumping):
+                    self.y += self.GRAVITY
             
+            if self.jumping:
+                if self.jumpcounter < 50 and (inputs[0] or inputs[3]):
+                    self.jumpcounter += 5
+                    self.y -= self.velocity * (self.jumpcounter/10)
+                else:
+                    self.jumpcounter = 0 #reset jump counter, begin fall
+                    self.jumping = False #no longer jumping, falling :D
+                
             if inputs[1]:
                 #left
                 if self.x > 0:
@@ -262,3 +283,4 @@ class Player:
 
 if __name__ == '__main__':
     print("Compilation Complete")
+

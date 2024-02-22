@@ -6,6 +6,10 @@ class Level:
     numberlimit = random.randint(1,7)
     currentimage = 0
     counter = 0
+
+    playerstart = (0,0)
+    winrect = None
+
     def __init__(self, images, surfaces):
         self.images = images
         self.surfaces = surfaces
@@ -21,9 +25,26 @@ class Level:
         else:
             self.counter += 1
         screen.blit(self.images[self.currentimage], (0,0))
+
     def check_collisions(self, player):
         #"safe" collisions
-        pass
+        for surface in self.safesurfaces + self.glitchsurfaces:
+                tempRect = pygame.Rect(surface[0][0],surface[0][1],surface[0][2],surface[0][3])
+                if pygame.Rect.colliderect(player.rect, tempRect):
+                    return tempRect
+        return False
+
+    def reset(self, player):
+        player.x, player.y = self.playerstart[0], self.playerstart[1]
+
+    def check_danger(self, player):
+        #"unsafe" collisions
+        for surface in self.dangersurfaces:
+                tempRect = pygame.Rect(surface[0][0],surface[0][1],surface[0][2],surface[0][3])
+                if pygame.Rect.colliderect(player.rect, tempRect):
+                    return True
+        return False
+
     def update_surfaces(self):
         self.safesurfaces = [i if (i[1] == 1) else None for i in self.surfaces]
         self.safesurfaces = list(filter(None, self.safesurfaces))
@@ -41,7 +62,7 @@ class Player:
     dead = False
     canjump = False
 
-    stableground = True
+    stableground = False
 
     velocity = 10
     direction = 1
@@ -79,10 +100,15 @@ class Player:
     def __init__(self,x,y):
         self.x = x
         self.y = y
-        self.rect = pygame.Rect(x+15, y, 34, 67)
+        self.width = 34
+        self.height = 67
+        self.rect = pygame.Rect(x+15, y, self.width, self.height)
 
     def draw(self, window):
         image = self.animate()
+        if image is None:
+            return "dead"
+
         if self.direction == 1:
             window.blit(image, (self.x,self.y))
         elif self.direction == -1:
@@ -94,7 +120,6 @@ class Player:
     def update(self):
         self.rect.x = self.x + 15
         self.rect.y = self.y
-
 
     def animate(self):
         #here we update current animation if needed
@@ -123,11 +148,14 @@ class Player:
             if self.stableground:
                 self.currentanimation = 'idle'
 
+        if not(self.stableground):
+            self.currentanimation = 'fall'
+
 
         if self.dead:
             self.currentanimation = 'dead'
-        if not(self.stableground):
-            self.currnetanimation = 'fall'
+
+        
 
         if temp != self.currentanimation:
             self.counter = 0 #reset so animation starts from frame 1
@@ -161,44 +189,76 @@ class Player:
         
         elif self.currentanimation == 'dead':
             if self.counter == self.DEADCL:
-                return True
+                return None
             else:
                 self.counter += 1
-
             return self.deadimages[self.counter//self.DEADIV]
         
         elif self.currentanimation == 'fall':            
             return self.jumpimages[-2]
 
-    def collide(self, level):
-        pass
-
-    def move(self):
-        inputs = funcs.movement.getMovementControls()
-        if self.stableground:
-            if inputs[0] or inputs[3] and self.canjump:
-                #jump
-                pass
+    def collide(self, level: Level):
+        if not(level.check_danger(self)):
+            surface = level.check_collisions(self)
+            if surface != False:
+                self.stableground = True
+                if self.rect.top < surface.top:
+                    #approach is from top
+                    self.y -= abs(self.rect.bottom - (surface.top+1))
+                elif self.rect.bottom > surface.bottom:
+                    #approach is from bottom
+                    self.y += abs(self.rect.top - (surface.bottom-1))    
+            else:
+                self.stableground = False
         else:
-            #gravity
-            self.y += self.GRAVITY
-        
-        if inputs[1]:
-            #left
-            self.x -= self.velocity
-            self.moving = True
-            self.direction = -1
+            self.dead = True
 
-        if inputs[2]:
-            #right
-            self.x += self.velocity
-            self.moving = True
-            self.direction = 1
+    def move(self,level):
+        if not(self.dead):
+            inputs = funcs.movement.getMovementControls()
+            if self.stableground:
+                if inputs[0] or inputs[3] and self.canjump:
+                    #jump
+                    pass
+            else:
+                #gravity
+                self.y += self.GRAVITY
+            
+            if inputs[1]:
+                #left
+                if self.x > 0:
+                    self.x -= self.velocity
+                elif self.x < 0:
+                    self.x = 0
 
-        if inputs[1] and inputs[2]:
-            self.moving = False
-        if not(inputs[1] or inputs[2]):
-            self.moving = False
+                self.moving = True
+                self.direction = -1
+
+            if inputs[2]:
+                #right
+                if pygame.Rect.colliderect(self.rect, level.winrect):
+                    if self.x < 1920 - self.width:
+                        #test
+                        self.x += self.velocity
+                    else:    
+                        self.x = 0
+                        return "next"
+
+                else:
+                    if self.x < 1920 - self.width:
+                        self.x += self.velocity
+                    elif self.x > 1920 - self.width:
+                        self.x = 1920 - self.width
+                #need to check for winbox
+                
+
+                self.moving = True
+                self.direction = 1
+
+            if inputs[1] and inputs[2]:
+                self.moving = False
+            if not(inputs[1] or inputs[2]):
+                self.moving = False
 
 if __name__ == '__main__':
     print("Compilation Complete")

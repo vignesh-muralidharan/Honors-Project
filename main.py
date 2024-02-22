@@ -16,12 +16,16 @@ screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
 Player = src.classes.Player(100,100)
 
 levels = [src.classes.Level(src.src.funcs.imageuse.getLevelImages(i), []) for i in range(1,4)]
-levelhitboxes = [src.hitboxdata.level1, src.hitboxdata.level2, src.hitboxdata.level3]
+
 for i in range(0,3):
-    for j in levelhitboxes[i]:
+    levels[i].playerstart = src.hitboxdata.start[i]
+    levels[i].winrect = pygame.Rect(src.hitboxdata.winrects[i])
+    for j in src.hitboxdata.levelhitboxes[i]:
         levels[i]._add_surface_(j)
     levels[i].update_surfaces()
+
 currentlevel = 0
+
 
 # Main game loop
 while True:
@@ -39,9 +43,24 @@ while True:
     #Game Logic
     # Update the display
     levels[currentlevel].animate(screen)
-    Player.draw(screen)
-    Player.move()
+    _ = Player.draw(screen)
+    if _ == 'dead':
+        levels[currentlevel].reset(Player)
+        Player.dead = False
+        Player.counter = 0
+        Player.currentanimation = 'idle'
+        _ = 'restart'
+        continue
+    __ = Player.move(levels[currentlevel])
+    if __ == "next":
+        currentlevel += 1
+        __ = 'stay'
+        if currentlevel == len(levels):
+                currentlevel = 0
+                Player.x,Player.y = (0,100) 
+    Player.collide(levels[currentlevel])
     
-    
+    pygame.draw.rect(screen, (255,130,130), levels[currentlevel].winrect, 1)
+    #refresh display
     pygame.display.flip()
     clock.tick(FPS)

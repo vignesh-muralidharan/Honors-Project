@@ -73,13 +73,17 @@ class Player:
     moving = True
     dead = False
     canjump = False
+    dashing = False
+    stop = True
 
     stableground = False
 
+    dashes = 1
     velocity = 10
     direction = 1
     counter = 0
     jumpcounter = 0
+    dashcounter = 0
     GRAVITY = 15
 
     currentanimation = 'fall'
@@ -221,6 +225,7 @@ class Player:
                 elif self.rect.bottom > surface.bottom:
                     #approach is from bottom
                     self.y += abs(self.rect.top - (surface.bottom - 5)) 
+                    self.jumping = False
             else:
                 self.stableground = False
         else:
@@ -230,17 +235,23 @@ class Player:
         if not(self.dead):
             inputs = funcs.movement.getMovementControls()
             if self.stableground and self.canjump:
-                if inputs[0] or inputs[3]:
+                if inputs[0] and self.stop:
                     self.jumping = True
             else:
                 #gravity // apply only if not jumping
-                if not(self.jumping):
+                if not(self.stableground) and not(self.jumping) and not(self.dashing):
                     self.y += self.GRAVITY
+
             
             if self.jumping:
-                if self.jumpcounter < 50 and (inputs[0] or inputs[3]):
-                    self.jumpcounter += 5
-                    self.y -= self.velocity * (self.jumpcounter/10)
+                if self.jumpcounter < 100 and (inputs[0]):
+                    self.jumpcounter += 3
+                    if self.y > 0:
+                        tempvel = self.velocity * (self.jumpcounter/12)
+                        if self.y - tempvel < 0:
+                            self.y = 0
+                        else:
+                            self.y -= tempvel
                 else:
                     self.jumpcounter = 0 #reset jump counter, begin fall
                     self.jumping = False #no longer jumping, falling :D
@@ -269,12 +280,25 @@ class Player:
                     if self.x < 1920 - self.width:
                         self.x += self.velocity
                     elif self.x > 1920 - self.width:
-                        self.x = 1920 - self.width
-                #need to check for winbox
-                
+                        self.x = 1920 - self.width            
 
                 self.moving = True
                 self.direction = 1
+            if inputs[3] and self.dashes != 0: 
+                #dash//teleport
+                if self.dashcounter != 10:
+                    self.dashing = True
+                    self.x += self.velocity * 5 * self.direction
+                    self.dashcounter += 1
+                else:
+                    self.dashes = 0
+                    self.dashcounter = 0
+                    self.dashing = False
+            
+            if self.dashcounter != 0 and not(inputs[3]):
+                self.dashes = 0
+                self.dashcounter = 0
+                self.dashing = False
 
             if inputs[1] and inputs[2]:
                 self.moving = False

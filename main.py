@@ -48,13 +48,16 @@ while True:
         levels[currentlevel].reset(Player)
         Player.dead = False
         Player.counter = 0
+        Player.dashes = 1
         Player.currentanimation = 'idle'
+
         _ = 'restart'
         continue
 
     __ = Player.move(levels[currentlevel])
     if __ == "next":
         currentlevel += 1
+        Player.dashes = 1
         __ = 'stay'
         if currentlevel == len(levels):
                 currentlevel = 0
@@ -64,7 +67,7 @@ while True:
 
     #debugtime
     font = pygame.font.SysFont("Arial", 30)
-    text = font.render("CanJump: {}, Jumping: {}, Stableground: {}, Jumpcounter: {} ".format(Player.canjump, Player.jumping, Player.stableground, Player.jumpcounter), True, (0,0,0))
+    text = font.render("CanJump: {}, Jumping: {}, Stableground: {}, Jumpcounter: {}, Dashcounter: {}, Dashes: {}, Dashing: {}".format(Player.canjump, Player.jumping, Player.stableground, Player.jumpcounter, Player.dashcounter, Player.dashes, Player.dashing), True, (0,0,0))
     screen.blit(text, (0,0))
     
     #debug code::
